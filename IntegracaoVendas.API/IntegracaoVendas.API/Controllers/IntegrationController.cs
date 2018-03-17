@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using IntegracaoVendas.API.Util;
+using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Web;
 using System.Web.Http;
+using IntegracaoVendas.API.Extensions;
 
 namespace IntegracaoVendas.API.Controllers
 {
@@ -23,11 +23,10 @@ namespace IntegracaoVendas.API.Controllers
         [HttpPost]
         [HttpGet]
         [Route("IntegrateTrackingSalesSystem")]
-        public async Task<IHttpActionResult> IntegrateTrackingSalesSystem(string postObject)
+        public async Task<IHttpActionResult> IntegrateTrackingSalesSystem(int postObject)
         {
             try
             {
-
                 //Retorna para o request sucesso na operação
                 return await Task.FromResult(Ok());
             }
