@@ -1,117 +1,114 @@
 # Intelipost: Teste Prático Desenvolvedor de Integrações
 
-Este é o teste usado por nós aqui da [Intelipost](http://www.intelipost.com.br) para avaliar tecnicamente os candidatos a nossas vagas de Integração de Software. Se você estiver participando de um processo seletivo para nossa equipe, certamente em algum momento receberá este link, mas caso você tenha chego aqui "por acaso", sinta-se convidado a desenvolver nosso teste e enviar uma mensagem para nós no e-mail `rogerio.spina@intelipost.com.br`. 
+Foi criada para resolução do teste uma WebAPI a partir da linguagem de programação C#, utilizando-se da estrutura de desenvolvimento MVC 5. A escolha destas ferramentas para o desenvolvimento baseou-se na familiaridade e experiência com as mesmas.
 
-Aqui na Intelipost nós aplicamos este mesmo teste para as vagas em todos os níveis, ou seja, um candidato a uma vaga júnior fará o mesmo teste de um outro candidato a uma vaga sênior, mudando obviamente o nosso critério de avaliação do resultado do teste. 
+O tempo gasto para o `desenvolvimento do código fonte` foi de aproximadamente **6h**, acrescentando mais algumas horas necessárias para `compreender o funcionamento do Git` e para a `formulação das instruções de utilização`.
 
-Nós fazemos isso esperando que as pessoas mais iniciantes entendam qual o modelo de profissional que temos por aqui e que buscamos para o nosso time. Portanto, se você estiver se candidatando a uma vaga mais iniciante, não se assuste, e faça o melhor que você puder!
+## Sobre o código fonte ##
 
-## Instruções
+O código fonte desenvolvido resume-se à 3 classes principais, responsáveis por realizar todas as operações necessárias para integrar os dados recebidos do sistema de Rastreamento, em um formato totalmente compatível com o sistema de Vendas.
 
-Você deverá criar um `fork` deste projeto, e desenvolver em cima do seu fork. Use o *README* principal do seu repositório para nos contar como foi resolver seu teste, as decisões tomadas, como você organizou e separou seu código, e principalmente as instruções de como rodar seu projeto, afinal a primeira pessoa que irá rodar seu projeto será um programador frontend de nossa equipe, e se você conseguir explicar para ele como fazer isso, você já começou bem!
+* **EnumStatus**
 
-Lembre-se que este é um teste técnico e não um concurso público, portanto, não existe apenas uma resposta correta. Mostre que você é bom e nos impressione, mas não esqueça do objetivo do projeto. 
+Nesta classe estão presentes os enumeradores para os diferentes status dos pedidos. Aqui, a partir de uma informação em comum entre os dois sistemas (que é o que o status representa), é possível extrair tanto seu valor numérico (sistema de rastreamento) quanto seu valor em texto correspondente (sistema de vendas). 
 
-Nós não definimos um tempo limite para resolução deste teste, o que vale para nós e o resultado final e a evolução da criação do projeto até se atingir este resultado, mas acreditamos que este desafio pode ser resolvido em cerca de 16 horas de codificação.
+```` 
+[Description("in_transit")]
+EmTransito      = 1,
+	    
+[Description("to_be_delivered")]
+SaiuParaEntrega = 2,
 
-## Um pouco sobre a Intelipost
+[Description("delivered")]
+Entregue        = 3
+```` 
 
-A Intelipost é uma startup de tecnologia que está revolucionando a logística no Brasil, um mercado de R$ 300B por ano com muitas ineficiências e desafios. Temos um sistema inovador que gerencia a logística para empresas do e-commerce. Já recebemos R$11 milhões de investimento até o momento, e em pouquissimo tempo já estamos colhendo grandes resultados: Em 2016 fomos selecionados como uma empresa [Promessas Endeavor](https://ecommercenews.com.br/noticias/parcerias-comerciais/intelipost-e-selecionada-pelo-promessas-endeavor/), também [ganhamos a competição IBM Smartcamp](https://www.ibm.com/blogs/robertoa/2016/11/intelipost-e-nazar-vencem-o-ibm-smartcamp-brasil-2016/), com foco de Big Data e data analysis, o que nos rendeu a [realização de um Hackathon sobre Blockchain junto a IBM](https://www.ibm.com/blogs/robertoa/2017/09/intelipost-e-ibm-realizam-o-primeiro-hackathon-de-blockchain-em-startup-do-brasil/), e em 2017 [fomos selecionados pela Oracle para sermos acelerados por eles no programa Oracle Startup Cloud Accelerator](https://www.oracle.com/br/corporate/pressrelease/oracle-anuncia-startups-selecionadas-programa-oracle-startup-cloud-accelerator-sao-paulo-20170804.html).
+* **EnumExtensions**
 
-Tecnicamente, o nosso maior desafio hoje é estar preparado para atender a todos os nossos clientes, que além de muitos, são grandes em número de requisições (Americanas, Submarino, Shoptime, Lojas Renner, Boticário, Livraria Cultura, Magazine Luiza, etc), totalizando mais de meio bilhão de requisições por mês.
+Esta classe é a responsável por fazer a tradução entre os status do pedido. A partir de um valor numérico (que representa o status do pedido) o método `GetEnumDescription` recupera o valor correspondente em forma de texto, buscando estas informações na classe EnumStatus.
 
-## O desafio
+* **IntegrationController**
 
-Imagine um sistema de rastreamento de encomendas. Toda vez que uma encomenda é marcada como entregue dentro deste sistema uma requisição http é disparada para uma url determinada.
+Esta classe é a responsável por obter as requisições feitas pelo sistema de vendas, através do método `IntegrateTrackingSalesSystem`, que recebe como parâmetro as informações do pedido em forma de JSON.
 
-Com a intenção de que esta requisição de notificação de entrega seja entendida por outro sistema, neste caso uma plataforma de vendas online, basta configurarmos a url da API deste outro sistema, correto? 
+Dentro deste método, os dados são deserializados em um objeto genérico para que em seguida, seja criado um novo objeto apenas com as informações relevantes para o sistema de vendas, e em seu formato esperado.
 
-Porém, a comunicação não aconteceu. 
+Dentro deste método, é possível identificar a chamada de um outro método interno chamado `GetEnumDescriptionByValue`, que recebe um tipo de enum genérico (ou seja, este método serve para qualquer enum existente na aplicação, e não apenas para o EnumStatus criado anteriormente. Para isso, basta que na chamada deste seja especificado qual Enum será utilizado para buscar as informações) e utiliza o método criado dentro da classe EnumExtensions para obter os dados.
 
-Tendo em vista que o modelo de comunicação disparado pelo sistema de rastreamento é diferente do que a API da plataforma de vendas espera, repare nos modelos de comunicação pré-definidos pelos sistemas:
+````
+this.GetEnumDescriptionByValue<EnumStatus.OrderStatus>("status_id")
+````
 
-> Todas as comunicações são feitas via HTTP e tem o seu conteudo em json.
+Por fim, o método tem como response o novo objeto esperado pelo sistema de vendas, em formato JSON.
 
-Modelo de comunicação disparado pelo sistema de rastreamento
-```
-{
-  	"order_id":123,
-	"event":{
-		"status_id":1
-		"date":"2018-02-02T10:45:32"
-	},
-	"package":{
-		"package_id":1,
-		"package_invoice":{
-			"number":"9871236",
-			"key":"01234567890123456789012345678901234567891234"
-			"date":"2018-02-01T10:45:32" 
-		}
-	}
-}
-```
+## Instruções de utilização
 
-Modelo de comunicação que a plataforma de vendas espera receber
-```
-[
-  {
-	"orderId":123,
-	"status":"delivered",
-	"date":"2018-02-02T10:45:32"
-  }
-]
-```
+**A) Baixando a API**
 
-Note tambem que os status estão em diferentes formatos nos dois sistemas, ou seja, para que a comunicação aconteça, tambem é necessario que estes status sejam traduzidos.
+1. Fazer download da [Api de Integração](https://github.com/DoVale-Daniel/job-integration-developer/archive/master.zip);
+2. Extrair o conteúdo do download para uma pasta local;
 
-Sistema 1 (Rastreamento de encomendas)
+&nbsp;
 
-|Status | Descição     
-| :---: |:-------------
-| 1     | Pedido em transito 
-| 2     | Pedido saiu para entrega      
-| 3     | Pedido entregue     
+**B) Publicando a API**
 
-Sistema 2 (Plataforma de vendas)
+Para a publicação da API desenvolvida, existem duas formas diferentes (uma delas requer utilização do **Visual Studio** para Build e Deploy, e a outra requer apenas publicação da api que se encontra na pasta **DeployAPI**).
 
-|Status | Descição     
-| :--- |:-------------
-| in_transit     | Pedido em transito 
-| to_be_delivered     | Pedido saiu para entrega      
-| delivered     | Pedido entregue
+&nbsp;
 
+> **Importante:** Antes de publicar a API, é importante que o seu computador tenha instalado o .NET Framework 4.5.1 ou superior, e tenha os recursos do Serviços de Informação da Internet (IIS) habilitados.
 
-Com base neste cenário:
+&nbsp;
 
-_1 )_ Codifique algo que permita a comunicação entre estes dois sistemas.
-> Quaisquer ferramentas e linguagens podem ser utilizadas no teste, mas nos conte o que te motivou a seguir por este caminho.
+**Alternativa 1: Através do Visual Studio**
 
-> Para simular as requisições do sistema de rastreamento recomendamos o [Postman](https://www.getpostman.com/). E para simular a API da plataforma de vendas recomendamos o [Requestbin](https://requestb.in/)
+1. Abrir o Visual Studio como Administrador;
+2. Abrir a solução do projeto contida na pasta "IntegracaoVendas.API";
+3. Dar build na solution (Ctrl + Shift + B);
+4. No windows, abrir o "Gerenciador de Serviços de Informações da Internet (IIS)";
+5. Clicar com o botão direito em "Pool de Aplicativos" > "Adicionar Pool de Aplicativos";
+6. Criar um Aplicativo com as configurações:
+	
+	- Nome = WebApiPool
+	- Versão do .NET Framework = v4.0.30319
+	- Modo de Pipeline gerenciado = Integrado
+	- Iniciar pool de aplicativos imediatamente = sim
 
-_2 )_ Caso na sua visão codificar algo para que eles se comuniquem não responde à melhor solução, escreva aqui qual a sua sugestão para que possamos resolver a comunicação entre estes dois sistemas.
+> **OBS:** Caso já possua um pool com estas configurações, o mesmo pode ser utilizado, sem a necessidade de criar um novo
 
+7. Em "Sites > Default Web Site", clicar com o botão direito em "IntegracaoVendas.API" > "Gerenciar Aplicativo" > "Configurações Avançadas";
 
-### O que nós esperamos do seu teste
+8. Na opção "Pool de Aplicativos", selecionar o novo pool que foi criado no passo 6, em seguida clicar em OK;
 
-* O código deverá ser hospedado em algum repositório público. Diversos quesitos serão avaliados aqui, como organização do código, sequencialidade de commits, nomeação de classes e métodos, etc.
-* O código deverá estar pronto para ser executado e testado, portanto, caso exista algum requisito, este deve estar completamente documentado no README do seu projeto.
-* Esperamos também alguma explicação sobre a solução, que pode ser em comentários no código, um texto escrito ou até um vídeo narrativo explicando a abordagem utilizada. 
+&nbsp;
 
-### O que nós ficaríamos felizes de ver em seu teste
+**Alternativa 2: Sem Visual Studio**
 
-* Testes
-* Processo de build e deploy documentado
-* Ver o código rodando live (em qualquer serviço por aí)
+1. Abrir a pasta "DeployAPI" e copiar a pasta "IntegracaoVendas.API" que está dentro dela;
+2. Abrir a pasta "C:/inetpub/wwroot" e colar a pasta que foi copiada no passo anterior;
+3. No windows, abrir o "Gerenciador de Serviços de Informações da Internet (IIS)";
+4. Clicar com o botão direito em "Pool de Aplicativos" > "Adicionar Pool de Aplicativos";
+5. Criar um Aplicativo com as configurações:
+	
+	- Nome = WebApiPool
+	- Versão do .NET Framework = v4.0.30319
+	- Modo de Pipeline gerenciado = Integrado
+	- Iniciar pool de aplicativos imediatamente = sim
 
-### O que nós não gostaríamos
+> **OBS:** Caso já possua um pool com estas configurações, o mesmo pode ser utilizado, sem a necessidade de criar um novo
 
-* Descobrir que não foi você quem fez seu teste
-* Ver commits grandes, sem muita explicação nas mensagens em seu repositório 
+6. Em "Sites > Default Web Site", clicar com o botão direito em "IntegracaoVendas.API" > "Converter para Aplicativo";
 
-## O que avaliaremos de seu teste
+7. Na opção "Pool de Aplicativos", selecionar o pool criado no passo 5, e em seguida clicar em OK. Depois, clicar em OK novamente;
 
-* Histórico de commits do git
-* As instruções de como rodar o projeto
-* Organização, semântica, estrutura, legibilidade, manutenibilidade do seu código
-* Alcance dos objetivos propostos
-* Escalabilidade da solução adotada 
+&nbsp;
+
+**C) Acessando a API**
+
+1. Via Postman, iniciar uma requisição do tipo POST, acessando a URL: 
+
+````
+http://localhost/IntegracaoVendas.Api/Integration/IntegrateTrackingSalesSystem?orderData={"order_id":123,"event":{"status_id":1,"date":"2018-02-02T10:45:32"},"package":{"package_id":1,"package_invoice":{"number":"9871236","key":"01234567890123456789012345678901234567891234","date":"2018-02-01T10:45:32" }}}
+````
+
+> **OBS:** O conteúdo do parâmetro "orderData" é o conteúdo no formato enviado pelo sistema de RASTREAMENTO (json). Os dados deste parâmetros são transformados dentro da API para o formato esperado pelo sistema de VENDAS.
